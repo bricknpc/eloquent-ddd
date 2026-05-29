@@ -1,0 +1,54 @@
+{
+    "name": "bricknpc/eloquent-ddd",
+    "description": "Develop Laravel apps with a Domain Driven Architecture",
+    "type": "library",
+    "version": "dev-main",
+    "require": {
+        "php": "^8.5",
+        "illuminate/support": "^12.0|^13.0"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "BrickNPC\\EloquentDDD\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BrickNPC\\EloquentDDD\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "bricknpc"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require-dev": {
+        "phpstan/phpstan": "^2.2",
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "deptrac/deptrac": "^4.6",
+        "phpunit/phpunit": "^13.1"
+    },
+    "scripts": {
+        "cs": "php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --allow-risky=yes",
+        "ps": "php vendor/bin/phpstan analyse --memory-limit=2G -c phpstan.neon",
+        "dt": "php vendor/bin/deptrac analyze --ansi",
+        "dt-uncovered": "php vendor/bin/deptrac analyze --report-uncovered --ansi",
+        "commit": [
+            "@cs",
+            "@ps",
+            "@dt"
+        ],
+        "c": "@commit",
+        "test": "php vendor/bin/phpunit -c phpunit.xml --colors=always --coverage-html tests/coverage/html"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "BrickNPC\\EloquentDDD\\Infrastructure\\Providers\\EloquentDDDServiceProvider"
+            ]
+        }
+    }
+}

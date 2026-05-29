@@ -1,0 +1,35 @@
+deptrac:
+  paths:
+    - ./src
+  exclude_files:
+    - '#.*test.*#'
+    - '#.*Infrastructure/Providers/.*#'
+  layers:
+    - name: Domain
+      collectors:
+        - type: bool
+          must:
+            - type: classNameRegex
+              value: '#^.*Domain\\#'
+    - name: Application
+      collectors:
+        - type: classNameRegex
+          value: '#^.*Application\\#'
+    - name: Infrastructure
+      collectors:
+        - type: classNameRegex
+          value: '#^.*Infrastructure\\#'
+    - name: Vendor
+      collectors:
+        - type: classNameRegex
+          value: '#^(Illuminate|Laravel|Symfony|Carbon|Composer|PHPUnit|Faker|Doctrine|Psr|GuzzleHttp|Mockery|BrickNPC|Spatie)\\#'
+  ruleset:
+    Domain:
+      - Vendor
+    Application:
+      - Domain
+      - Vendor
+    Infrastructure:
+      - Domain
+      - Application
+      - Vendor
