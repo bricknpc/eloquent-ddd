@@ -5,13 +5,17 @@
     "version": "dev-main",
     "require": {
         "php": "^8.5",
-        "illuminate/support": "^12.0|^13.0"
+        "illuminate/support": "^12.0|^13.0",
+        "illuminate/database": "^13.12"
     },
     "license": "MIT",
     "autoload": {
         "psr-4": {
             "BrickNPC\\EloquentDDD\\": "src/"
-        }
+        },
+        "files": [
+            "src/Domain/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
