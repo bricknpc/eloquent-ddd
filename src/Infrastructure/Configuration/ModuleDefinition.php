@@ -96,10 +96,17 @@ final readonly class ModuleDefinition
     }
 
     /**
-     * @param \Closure(Schedule $schedule): void $schedule
+     * @param \Closure(Schedule $callback): void $callback
      */
-    public function withSchedule(\Closure $schedule): self
+    public function withSchedule(\Closure $callback): self
     {
+        $this->application->starting(function (Application $application) use ($callback) {
+            /** @var Schedule $schedule */
+            $schedule = $application->make(Schedule::class);
+
+            call_user_func($callback, $schedule);
+        });
+
         return $this;
     }
 
