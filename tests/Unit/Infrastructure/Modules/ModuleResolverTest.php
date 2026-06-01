@@ -6,16 +6,18 @@ namespace BrickNPC\EloquentDDD\Tests\Unit\Infrastructure\Modules;
 
 use PHPUnit\Framework\Attributes\Test;
 use BrickNPC\EloquentDDD\Tests\TestCase;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\CoversClass;
 use BrickNPC\EloquentDDD\Domain\Models\DomainModel;
-use BrickNPC\EloquentDDD\Infrastructure\Dto\ModuleContext;
 use App\Users\Infrastructure\Providers\UserServiceProvider;
+use BrickNPC\EloquentDDD\Infrastructure\Modules\ModuleContext;
 use BrickNPC\EloquentDDD\Infrastructure\Modules\ModuleResolver;
 
 /**
  * @internal
  */
 #[CoversClass(ModuleResolver::class)]
+#[UsesClass(ModuleContext::class)]
 class ModuleResolverTest extends TestCase
 {
     protected function setUp(): void

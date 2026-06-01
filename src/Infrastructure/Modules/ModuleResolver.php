@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace BrickNPC\EloquentDDD\Infrastructure\Modules;
 
-use BrickNPC\EloquentDDD\Infrastructure\Dto\ModuleContext;
-
 final readonly class ModuleResolver
 {
     private const string NAMESPACE_KEYWORD = 'Infrastructure';

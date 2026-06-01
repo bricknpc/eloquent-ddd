@@ -7,15 +7,23 @@ namespace BrickNPC\EloquentDDD\Infrastructure\Configuration;
 use Psr\Log\LoggerInterface;
 use Illuminate\Routing\Router;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Contracts\View\View;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Translation\Translator;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Migrations\Migrator;
+use Illuminate\View\Compilers\BladeCompiler;
 use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Contracts\Foundation\CachesConfiguration;
 use Illuminate\Console\Application as ConsoleApplication;
-use BrickNPC\EloquentDDD\Infrastructure\Dto\ModuleContext;
+use BrickNPC\EloquentDDD\Infrastructure\Modules\ModuleContext;
+use BrickNPC\EloquentDDD\Infrastructure\Registrars\ConfigRegistrar;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\RoutingRegistrar;
 
 use function BrickNPC\EloquentDDD\Domain\path;
@@ -79,21 +87,37 @@ final readonly class ModuleDefinition
     }
 
     /**
-     * @param null|\Closure(Middleware $middleware): void $callback
+     * @param \Closure(Middleware $middleware): void $callback
      */
-    public function withMiddleware(?\Closure $callback = null): self
+    public function withMiddleware(\Closure $callback): self
     {
+        /** @var Middleware $middleware */
+        $middleware = $this->application->make(Middleware::class);
+
+        $this->application->afterResolving(HttpKernel::class, function (HttpKernel $kernel) use ($callback, $middleware) {
+            call_user_func($callback, $middleware);
+        });
+
+        $this->logger->debug(sprintf('Registered middleware for module %s', $this->context->name), [
+            'module' => $this->context->name,
+        ]);
+
         return $this;
     }
 
     /**
      * @param array<int, class-string> $commands
      */
-    public function withCommands(array $commands = []): self
+    public function withCommands(array $commands): self
     {
         $this->application->starting(function (ConsoleApplication $artisan) use ($commands) {
             $artisan->resolveCommands($commands);
         });
+
+        $this->logger->debug(sprintf('Registered commands for module %s', $this->context->name), [
+            'module'   => $this->context->name,
+            'commands' => $commands,
+        ]);
 
         return $this;
     }
@@ -110,6 +134,10 @@ final readonly class ModuleDefinition
             call_user_func($callback, $schedule);
         });
 
+        $this->logger->debug(sprintf('Registered schedule for module %s', $this->context->name), [
+            'module' => $this->context->name,
+        ]);
+
         return $this;
     }
 
@@ -122,6 +150,10 @@ final readonly class ModuleDefinition
             Handler::class,
             fn (Handler $handler) => call_user_func($exceptions, new Exceptions($handler)),
         );
+
+        $this->logger->debug(sprintf('Registered exception handlers for module %s', $this->context->name), [
+            'module' => $this->context->name,
+        ]);
 
         return $this;
     }
@@ -146,8 +178,108 @@ final readonly class ModuleDefinition
         return $this;
     }
 
-    public function withViews(string $viewNamespace): self
+    public function withViews(?string $viewPath = null, ?string $viewNamespace = null): self
     {
+        $viewNamespace ??= $this->context->viewNamespace;
+        $viewPath      ??= path($this->context->basePath, 'Application', 'Resources', 'Views');
+
+        $this->application->afterResolving('view', function (Factory $view) use ($viewNamespace, $viewPath) {
+            $view->addNamespace($viewNamespace, $viewPath);
+        });
+
+        $this->logger->debug(sprintf('Registered view paths for module %s', $this->context->name), [
+            'module'         => $this->context->name,
+            'view-namespace' => $viewNamespace,
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * @param array<int, string>|string         $views
+     * @param \Closure(View $view): void|string $composer
+     */
+    public function withViewComposer(array|string $views, \Closure|string $composer): self
+    {
+        $this->application->afterResolving('view', function (Factory $view) use ($views, $composer) {
+            $view->composer($views, $composer);
+        });
+
+        $this->logger->debug(sprintf('Registered view composer for module %s', $this->context->name), [
+            'module' => $this->context->name,
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * @param array<int, string>|string         $views
+     * @param \Closure(View $view): void|string $creator
+     */
+    public function withViewCreator(array|string $views, \Closure|string $creator): self
+    {
+        $this->application->afterResolving('view', function (Factory $view) use ($views, $creator) {
+            $view->creator($views, $creator);
+        });
+
+        $this->logger->debug(sprintf('Registered view creator for module %s', $this->context->name), [
+            'module' => $this->context->name,
+        ]);
+
+        return $this;
+    }
+
+    public function withViewComponents(?string $componentFolder = null, ?string $prefix = null): self
+    {
+        $componentFolder ??= path($this->context->basePath, 'Application', 'Resources', 'Components');
+        $prefix          ??= $this->context->viewNamespace;
+
+        $this->application->afterResolving(BladeCompiler::class, function (BladeCompiler $blade) use ($prefix, $componentFolder) {
+            $blade->componentNamespace($prefix, $componentFolder);
+        });
+
+        $this->logger->debug(sprintf('Registered view components for module %s', $this->context->name), [
+            'module' => $this->context->name,
+            'prefix' => $prefix,
+            'folder' => $componentFolder,
+        ]);
+
+        return $this;
+    }
+
+    public function withTranslations(?string $path = null): self
+    {
+        $path ??= path($this->context->basePath, 'Application', 'Resources', 'Lang');
+
+        $this->application->afterResolving('translator', function (Translator $translator) use ($path) {
+            $translator->addJsonPath($path);
+        });
+
+        $this->logger->debug(sprintf('Registered translations for module %s', $this->context->name), [
+            'module' => $this->context->name,
+            'path'   => $path,
+        ]);
+
+        return $this;
+    }
+
+    public function withConfig(string ...$files): self
+    {
+        if ($this->application instanceof CachesConfiguration && $this->application->configurationIsCached()) {
+            return $this;
+        }
+
+        /** @var Repository $repository */
+        $repository = $this->application->make(Repository::class);
+        $configPath = path($this->context->basePath, 'Infrastructure', 'Config');
+
+        new ConfigRegistrar($repository, $configPath, $this->context->name)(...$files);
+
+        $this->logger->debug(sprintf('Registered config for module %s', $this->context->name), [
+            'module' => $this->context->name,
+            'files'  => $files,
+        ]);
+
         return $this;
     }
 }
