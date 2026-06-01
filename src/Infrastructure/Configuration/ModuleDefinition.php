@@ -9,8 +9,11 @@ use Illuminate\Routing\Router;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\Migrations\Migrator;
+use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Console\Application as ConsoleApplication;
 use BrickNPC\EloquentDDD\Infrastructure\Dto\ModuleContext;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\RoutingRegistrar;
@@ -115,6 +118,11 @@ final readonly class ModuleDefinition
      */
     public function withExceptions(\Closure $exceptions): self
     {
+        $this->application->afterResolving(
+            Handler::class,
+            fn (Handler $handler) => call_user_func($exceptions, new Exceptions($handler)),
+        );
+
         return $this;
     }
 
