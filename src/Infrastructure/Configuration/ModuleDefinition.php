@@ -9,6 +9,7 @@ use Illuminate\Events\Dispatcher;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
+use BrickNPC\EloquentDDD\Infrastructure\Modules\ModuleContext;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\EventRegistrar;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\RoutingRegistrar;
 
@@ -16,9 +17,7 @@ final readonly class ModuleDefinition
 {
     public function __construct(
         private Application $application,
-        private string $name, // @phpstan-ignore-line
-        private string $namespace, // @phpstan-ignore-line
-        private string $path,
+        private ModuleContext $context,
     ) {}
 
     /**
@@ -37,7 +36,7 @@ final readonly class ModuleDefinition
         /** @var Router $router */
         $router = $this->application->make('router');
 
-        new RoutingRegistrar($router, $this->path)($web, $api, $apiPrefix);
+        new RoutingRegistrar($router, $this->context->basePath)($web, $api, $apiPrefix);
 
         return $this;
     }
