@@ -10,3 +10,12 @@ function assert_named_arguments(?string $method = null, mixed ...$arguments): vo
         throw new \InvalidArgumentException(sprintf('%s only supports named arguments.', $method ?? 'This method'));
     }
 }
+
+function path(string ...$segments): string
+{
+    return collect($segments)
+        ->map(fn (string $segment): string => rtrim($segment, DIRECTORY_SEPARATOR))
+        ->implode(DIRECTORY_SEPARATOR)
+        . DIRECTORY_SEPARATOR
+    ;
+}

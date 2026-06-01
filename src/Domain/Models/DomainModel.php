@@ -6,10 +6,9 @@ namespace BrickNPC\EloquentDDD\Domain\Models;
 
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Container\Container as ContainerContract;
 
 use function BrickNPC\EloquentDDD\Domain\assert_named_arguments;
-
-use Illuminate\Contracts\Container\Container as ContainerContract;
 
 abstract class DomainModel extends Model
 {

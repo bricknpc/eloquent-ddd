@@ -20,7 +20,7 @@ return $config->setRules([
     '@PhpCsFixer'                         => true,
     'strict_param'                        => true,
     'array_syntax'                        => ['syntax' => 'short'],
-    'ordered_imports'                     => ['sort_algorithm' => 'length'],
+    'ordered_imports'                     => ['sort_algorithm' => 'length', 'imports_order' => ['class', 'const', 'function']],
     'binary_operator_spaces'              => ['default' => 'align'],
     'return_assignment'                   => false,
     'concat_space'                        => ['spacing' => 'one'],
