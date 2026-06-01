@@ -9,18 +9,16 @@ use Illuminate\Routing\Router;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Contracts\View\View;
 use Illuminate\Contracts\View\Factory;
+use Illuminate\Foundation\Application;
 use Illuminate\Translation\Translator;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\View\Compilers\BladeCompiler;
 use Illuminate\Foundation\Exceptions\Handler;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Contracts\Foundation\CachesConfiguration;
 use Illuminate\Console\Application as ConsoleApplication;
 use BrickNPC\EloquentDDD\Infrastructure\Modules\ModuleContext;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\ConfigRegistrar;
@@ -31,7 +29,7 @@ use function BrickNPC\EloquentDDD\Domain\path;
 final readonly class ModuleDefinition
 {
     public function __construct(
-        private Application&ConsoleApplication $application,
+        private Application $application,
         private LoggerInterface $logger,
         private ModuleContext $context,
     ) {
@@ -51,7 +49,7 @@ final readonly class ModuleDefinition
         array|string|null $api = null,
         ?string $apiPrefix = null,
     ): self {
-        if ($this->application instanceof CachesRoutes && $this->application->routesAreCached()) {
+        if ($this->application->routesAreCached()) {
             return $this;
         }
 
@@ -110,7 +108,7 @@ final readonly class ModuleDefinition
      */
     public function withCommands(array $commands): self
     {
-        $this->application->starting(function (ConsoleApplication $artisan) use ($commands) {
+        ConsoleApplication::starting(function (ConsoleApplication $artisan) use ($commands) {
             $artisan->resolveCommands($commands);
         });
 
@@ -127,9 +125,9 @@ final readonly class ModuleDefinition
      */
     public function withSchedule(\Closure $callback): self
     {
-        $this->application->starting(function (Application $application) use ($callback) {
+        ConsoleApplication::starting(function (ConsoleApplication $application) use ($callback) {
             /** @var Schedule $schedule */
-            $schedule = $application->make(Schedule::class);
+            $schedule = $this->application->make(Schedule::class);
 
             call_user_func($callback, $schedule);
         });
@@ -265,7 +263,7 @@ final readonly class ModuleDefinition
 
     public function withConfig(string ...$files): self
     {
-        if ($this->application instanceof CachesConfiguration && $this->application->configurationIsCached()) {
+        if ($this->application->configurationIsCached()) {
             return $this;
         }
 

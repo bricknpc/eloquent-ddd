@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace BrickNPC\EloquentDDD\Infrastructure\Providers;
 
 use Psr\Log\LoggerInterface;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Console\Application as ConsoleApplication;
 use BrickNPC\EloquentDDD\Infrastructure\Modules\ModuleResolver;
 use BrickNPC\EloquentDDD\Infrastructure\Configuration\ModuleDefinition;
 
@@ -29,7 +28,7 @@ abstract class ModuleServiceProvider extends ServiceProvider
         /** @var LoggerInterface $logger */
         $logger = $this->app->make(LoggerInterface::class);
 
-        /** @var Application&ConsoleApplication $app */
+        /** @var Application $app */
         $app = $this->app;
 
         return new ModuleDefinition($app, $logger, $moduleContext);
