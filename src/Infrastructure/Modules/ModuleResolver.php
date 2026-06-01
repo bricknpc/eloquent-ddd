@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace BrickNPC\EloquentDDD\Infrastructure\Modules;
 
+use BrickNPC\EloquentDDD\Infrastructure\Dto\ModuleContext;
+
 final readonly class ModuleResolver
 {
     private const string NAMESPACE_KEYWORD = 'Infrastructure';
@@ -52,13 +54,7 @@ final readonly class ModuleResolver
     {
         $parts = explode('\\', $serviceProvider);
 
-        $index = array_search(self::NAMESPACE_KEYWORD, $parts, true);
-
-        if ($index === false || $index === 0) {
-            throw new \RuntimeException(
-                sprintf('Cannot resolve module name from service provider: %s', $serviceProvider),
-            );
-        }
+        $index = $this->findKeywordIndex($parts);
 
         return $parts[$index - 1];
     }
@@ -70,13 +66,7 @@ final readonly class ModuleResolver
     {
         $parts = explode('\\', $serviceProvider);
 
-        $index = array_search(self::NAMESPACE_KEYWORD, $parts, true);
-
-        if ($index === false || $index === 0) {
-            throw new \RuntimeException(
-                sprintf('Cannot resolve module namespace from service provider: %s', $serviceProvider),
-            );
-        }
+        $index = $this->findKeywordIndex($parts);
 
         return implode('\\', array_slice($parts, 0, $index));
     }
@@ -85,14 +75,24 @@ final readonly class ModuleResolver
     {
         $parts = explode(DIRECTORY_SEPARATOR, $filePath);
 
+        $index = $this->findKeywordIndex($parts);
+
+        return implode(DIRECTORY_SEPARATOR, array_slice($parts, 0, $index));
+    }
+
+    /**
+     * @param array<int, string> $parts
+     */
+    private function findKeywordIndex(array $parts): int
+    {
         $index = array_search(self::NAMESPACE_KEYWORD, $parts, true);
 
         if ($index === false || $index === 0) {
             throw new \RuntimeException(
-                sprintf('Cannot resolve module path from service provider: %s', $serviceProvider),
+                sprintf('Cannot resolve module context: %s', implode('\\', $parts)),
             );
         }
 
-        return implode(DIRECTORY_SEPARATOR, array_slice($parts, 0, $index));
+        return $index;
     }
 }

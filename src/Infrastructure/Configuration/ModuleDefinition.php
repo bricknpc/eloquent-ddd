@@ -9,7 +9,7 @@ use Illuminate\Events\Dispatcher;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
-use BrickNPC\EloquentDDD\Infrastructure\Modules\ModuleContext;
+use BrickNPC\EloquentDDD\Infrastructure\Dto\ModuleContext;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\EventRegistrar;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\RoutingRegistrar;
 

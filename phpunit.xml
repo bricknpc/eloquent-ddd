@@ -33,6 +33,7 @@
             <directory>src/Domain/ValueObjects</directory>
             <directory>src/Infrastructure/Providers</directory>
             <directory>src/Infrastructure/Database</directory>
+            <directory>src/Infrastructure/Dto</directory>
         </exclude>
     </source>
     <php>
