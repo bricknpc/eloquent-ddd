@@ -11,17 +11,16 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
+use Illuminate\Console\Application as ConsoleApplication;
 use BrickNPC\EloquentDDD\Infrastructure\Dto\ModuleContext;
-use BrickNPC\EloquentDDD\Infrastructure\Registrars\EventRegistrar;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\RoutingRegistrar;
-use BrickNPC\EloquentDDD\Infrastructure\Registrars\MigrationRegistrar;
 
 use function BrickNPC\EloquentDDD\Domain\path;
 
 final readonly class ModuleDefinition
 {
     public function __construct(
-        private Application $application,
+        private Application&ConsoleApplication $application,
         private LoggerInterface $logger,
         private ModuleContext $context,
     ) {
@@ -65,7 +64,7 @@ final readonly class ModuleDefinition
         $migrationsPath = path($this->context->basePath, 'Infrastructure', 'Database', 'Migrations');
 
         $this->application->afterResolving('migrator', function (Migrator $migrator) use ($migrationsPath) {
-            new MigrationRegistrar($migrator)($migrationsPath);
+            $migrator->path($migrationsPath);
         });
 
         $this->logger->debug(sprintf('Registered migrations for module %s', $this->context->name), [
@@ -89,6 +88,10 @@ final readonly class ModuleDefinition
      */
     public function withCommands(array $commands = []): self
     {
+        $this->application->starting(function (ConsoleApplication $artisan) use ($commands) {
+            $artisan->resolveCommands($commands);
+        });
+
         return $this;
     }
 
@@ -109,15 +112,6 @@ final readonly class ModuleDefinition
     }
 
     /**
-     * @param class-string          $abstract
-     * @param callable|class-string $concrete
-     */
-    public function withBinding(string $abstract, callable|string $concrete): self
-    {
-        return $this;
-    }
-
-    /**
      * @param class-string                               $event
      * @param class-string|\Closure(object $event): void $listener
      */
@@ -126,7 +120,7 @@ final readonly class ModuleDefinition
         /** @var Dispatcher $dispatcher */
         $dispatcher = $this->application->make('events');
 
-        new EventRegistrar($dispatcher)($event, $listener);
+        $dispatcher->listen($event, $listener);
 
         $this->logger->debug(sprintf('Registered event listener for module %s', $this->context->name), [
             'module'   => $this->context->name,
