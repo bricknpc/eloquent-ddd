@@ -4,21 +4,33 @@ declare(strict_types=1);
 
 namespace BrickNPC\EloquentDDD\Infrastructure\Configuration;
 
+use Psr\Log\LoggerInterface;
 use Illuminate\Routing\Router;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use BrickNPC\EloquentDDD\Infrastructure\Dto\ModuleContext;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\EventRegistrar;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\RoutingRegistrar;
+use BrickNPC\EloquentDDD\Infrastructure\Registrars\MigrationRegistrar;
+
+use function BrickNPC\EloquentDDD\Domain\path;
 
 final readonly class ModuleDefinition
 {
     public function __construct(
         private Application $application,
+        private LoggerInterface $logger,
         private ModuleContext $context,
-    ) {}
+    ) {
+        $this->logger->debug(sprintf('Initiated module %s', $this->context->name), [
+            'module'    => $this->context->name,
+            'namespace' => $this->context->baseNamespace,
+            'path'      => $this->context->basePath,
+        ]);
+    }
 
     /**
      * @param null|array<int, string>|string $web
@@ -38,11 +50,29 @@ final readonly class ModuleDefinition
 
         new RoutingRegistrar($router, $this->context->basePath)($web, $api, $apiPrefix);
 
+        $this->logger->debug(sprintf('Registered routes for module %s', $this->context->name), [
+            'module'    => $this->context->name,
+            'web'       => $web,
+            'api'       => $api,
+            'apiPrefix' => $apiPrefix,
+        ]);
+
         return $this;
     }
 
     public function withMigrations(): self
     {
+        $migrationsPath = path($this->context->basePath, 'Infrastructure', 'Database', 'Migrations');
+
+        $this->application->afterResolving('migrator', function (Migrator $migrator) use ($migrationsPath) {
+            new MigrationRegistrar($migrator)($migrationsPath);
+        });
+
+        $this->logger->debug(sprintf('Registered migrations for module %s', $this->context->name), [
+            'module' => $this->context->name,
+            'path'   => $migrationsPath,
+        ]);
+
         return $this;
     }
 
@@ -97,6 +127,12 @@ final readonly class ModuleDefinition
         $dispatcher = $this->application->make('events');
 
         new EventRegistrar($dispatcher)($event, $listener);
+
+        $this->logger->debug(sprintf('Registered event listener for module %s', $this->context->name), [
+            'module'   => $this->context->name,
+            'event'    => $event,
+            'listener' => $listener instanceof \Closure ? 'Closure' : $listener,
+        ]);
 
         return $this;
     }
