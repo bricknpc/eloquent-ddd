@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace BrickNPC\EloquentDDD\Infrastructure\Configuration;
 
-use BrickNPC\EloquentDDD\Infrastructure\Modules\ModulePaths;
 use Psr\Log\LoggerInterface;
 use Illuminate\Routing\Router;
 use Illuminate\Events\Dispatcher;
@@ -21,11 +20,10 @@ use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Console\Application as ConsoleApplication;
+use BrickNPC\EloquentDDD\Infrastructure\Modules\ModulePaths;
 use BrickNPC\EloquentDDD\Infrastructure\Modules\ModuleContext;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\ConfigRegistrar;
 use BrickNPC\EloquentDDD\Infrastructure\Registrars\RoutingRegistrar;
-
-use function BrickNPC\EloquentDDD\Domain\path;
 
 final readonly class ModuleDefinition
 {

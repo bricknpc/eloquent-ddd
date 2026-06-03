@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace BrickNPC\EloquentDDD\Infrastructure\Modules;
 
 use function BrickNPC\EloquentDDD\Domain\path;
