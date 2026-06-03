@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BrickNPC\EloquentDDD\Infrastructure\Configuration;
 
+use BrickNPC\EloquentDDD\Infrastructure\Modules\ModulePaths;
 use Psr\Log\LoggerInterface;
 use Illuminate\Routing\Router;
 use Illuminate\Events\Dispatcher;
@@ -70,7 +71,7 @@ final readonly class ModuleDefinition
 
     public function withMigrations(): self
     {
-        $migrationsPath = path($this->context->basePath, 'Infrastructure', 'Database', 'Migrations');
+        $migrationsPath = ModulePaths::migrations($this->context);
 
         $this->application->afterResolving('migrator', function (Migrator $migrator) use ($migrationsPath) {
             $migrator->path($migrationsPath);
@@ -179,7 +180,7 @@ final readonly class ModuleDefinition
     public function withViews(?string $viewPath = null, ?string $viewNamespace = null): self
     {
         $viewNamespace ??= $this->context->viewNamespace;
-        $viewPath      ??= path($this->context->basePath, 'Application', 'Resources', 'Views');
+        $viewPath      ??= ModulePaths::views($this->context);
 
         $this->application->afterResolving('view', function (Factory $view) use ($viewNamespace, $viewPath) {
             $view->addNamespace($viewNamespace, $viewPath);
@@ -229,7 +230,7 @@ final readonly class ModuleDefinition
 
     public function withViewComponents(?string $componentFolder = null, ?string $prefix = null): self
     {
-        $componentFolder ??= path($this->context->basePath, 'Application', 'Resources', 'Components');
+        $componentFolder ??= ModulePaths::components($this->context);
         $prefix          ??= $this->context->viewNamespace;
 
         $this->application->afterResolving(BladeCompiler::class, function (BladeCompiler $blade) use ($prefix, $componentFolder) {
@@ -247,7 +248,7 @@ final readonly class ModuleDefinition
 
     public function withTranslations(?string $path = null): self
     {
-        $path ??= path($this->context->basePath, 'Application', 'Resources', 'Lang');
+        $path ??= ModulePaths::translations($this->context);
 
         $this->application->afterResolving('translator', function (Translator $translator) use ($path) {
             $translator->addJsonPath($path);
@@ -269,7 +270,7 @@ final readonly class ModuleDefinition
 
         /** @var Repository $repository */
         $repository = $this->application->make(Repository::class);
-        $configPath = path($this->context->basePath, 'Infrastructure', 'Config');
+        $configPath = ModulePaths::config($this->context);
 
         new ConfigRegistrar($repository, $configPath, $this->context->name)(...$files);
 
